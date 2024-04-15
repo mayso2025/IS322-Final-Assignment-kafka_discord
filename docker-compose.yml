@@ -115,11 +115,11 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_TOPIC: kafka_commands
 
-  discord_bot_consumer:
+  discord_speak_consumer:
       build:
         context: .
-        dockerfile: discord_bot_consumer/Dockerfile
-      container_name: discord_bot_consumer
+        dockerfile: discord_speak_consumer/Dockerfile
+      container_name: discord_speak_consumer
       networks:
         - kafka_network
       depends_on:
@@ -127,9 +127,6 @@ services:
         - schema-registry
         - minio
         - kafka_producer
-      environment:
-        KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-        KAFKA_TOPIC: kafka_commands
 
   discord_listen_producer:
         build:
