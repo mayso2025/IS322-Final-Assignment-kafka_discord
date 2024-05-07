@@ -1,7 +1,7 @@
 from langchain_community.document_loaders import DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores.chroma import Chroma
 from langchain_community.chat_models import ChatOpenAI
 import os
@@ -10,7 +10,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 import shutil
 
 CHROMA_PATH = "chroma"
-DATA_PATH = "data/books"
+DATA_PATH = "data"
 
 
 def main():
@@ -39,7 +39,7 @@ def split_text(documents: list[Document]):
     chunks = text_splitter.split_documents(documents)
     print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
-    document = chunks[15]
+    document = chunks[5]
     print(document.page_content)
     print(document.metadata)
 
