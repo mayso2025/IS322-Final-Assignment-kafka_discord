@@ -9,3 +9,5 @@ Repeat cycle essentially creating an endless AI generated Dungeons and Dragons c
 Find ways to include more players  
 
 Alternatively work on creating a basic discord AI chatbot that can be used as like a catered chatGPT with humor and information that a particular group enjoys such as gaming communities specifically catered towards indie games. 
+
+Link to video demo https://drive.google.com/file/d/1bRXUOBO6SuaN6Yw7kYEnlyxGN6dYk0Bg/view?usp=sharing 
