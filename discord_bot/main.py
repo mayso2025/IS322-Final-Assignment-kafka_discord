@@ -41,16 +41,6 @@ logging_config = {
     }
 }
 
-import asyncio
-import logging
-from aiohttp import ClientSession, BasicAuth
-from nextcord.ext import commands
-from nextcord.ext.commands import Bot
-from pydantic import BaseModel, BaseSettings
-from langchain import ChatOpenAI, ChatPromptTemplate, RunnablePassthrough, StrOutputParser
-
-logging.basicConfig(level=logging.INFO)
-
 DATA_PATH = "discord_bot\data\stuff\output.md"
 
 # Configure logging
@@ -100,10 +90,6 @@ async def upload_files(attachments):
 
 conversation_state = {}
 
-async def save_to_file(data):
-    with open(DATA_PATH, 'a') as file:
-        file.write(data + "\n")
-
 @bot.event
 async def on_ready():
     logger.info(f'Logged in as {bot.user}')
@@ -118,7 +104,7 @@ async def on_ready():
 async def echo(ctx, *, message: str):
     await ctx.send(message)
 
-@bot.event #main chatbot function, "starts the adventure" so to speak
+@bot.event #main chatbot function, "starts the adventure" when
 async def on_message(message):
     global conversation_state
     if message.author == bot.user: #disregards a message if its a message from itself, returns the main prompt
@@ -130,17 +116,13 @@ async def on_message(message):
             conversation_state[message.author.id] = {"prompt": None, "last_response": None}
 
         if conversation_state[message.author.id]["prompt"] is None:
-            # Initial prompt
             prompt_text = f"Respond with 'glad to see such enthusiasm!', You are a DND dungeon master, give the player an amazing adventure in a time set where Steampunk machines reigned supreme in the city of London! Give the player a scenario, could be funny, serious or normal. Ask them what they would want to do"
         else:
-            # Generate prompt based on user's response
             prompt_text = f"{conversation_state[message.author.id]['prompt']} {message.content}"
 
-        # Create prompt from text
         prompt = ChatPromptTemplate.from_messages([("system", prompt_text)])
         logger.info("Generating response using Chat API")
-        print("User's Message:", message.content)
-        # Create pipeline
+
         chain = (
             RunnablePassthrough.assign(
                 input=lambda x: x["input"]
@@ -149,22 +131,15 @@ async def on_message(message):
             | chat_api
             | StrOutputParser()
         )
-
+        
         try:
-            # Generate response
             response = await chain.ainvoke({"input": message.content})
             logger.info("Response generated successfully")
             response_message = f"The Floating Gear Man: {response}"
             await message.channel.send(response_message)
             logger.info(f"Generated response: {response}")
-            # Update conversation state
             conversation_state[message.author.id]["last_response"] = response
             conversation_state[message.author.id]["prompt"] = message.content
-
-            # Save the first user response and the first AI response to a Markdown file
-            if conversation_state[message.author.id]["last_response"] and conversation_state[message.author.id]["prompt"]:
-                await save_to_file(f"User's first message: {conversation_state[message.author.id]['prompt']}")
-                await save_to_file(f"Bot's first response: {conversation_state[message.author.id]['last_response']}")
         except Exception as e:
             logger.error(f"Failed to generate response: {e}")
             await message.channel.send("Sorry, I encountered an error. Please try asking something else.")
@@ -192,5 +167,4 @@ async def stop():
 
 if __name__ == "__main__":
     asyncio.run(start())
-
 
