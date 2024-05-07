@@ -1,2 +1,5 @@
 .env
 *venv
+chroma_*
+chroma
+.DS_Store
