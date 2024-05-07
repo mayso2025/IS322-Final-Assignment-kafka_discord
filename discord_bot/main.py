@@ -88,8 +88,6 @@ async def upload_files(attachments):
                     logger.error(f"Failed to upload file to MinIO: {response.status}")
     return urls
 
-conversation_state = {}
-
 @bot.event
 async def on_ready():
     logger.info(f'Logged in as {bot.user}')
@@ -104,45 +102,35 @@ async def on_ready():
 async def echo(ctx, *, message: str):
     await ctx.send(message)
 
-@bot.event #main chatbot function, "starts the adventure" when
+@bot.event
 async def on_message(message):
-    global conversation_state
-    if message.author == bot.user: #disregards a message if its a message from itself, returns the main prompt
-        logger.debug("Received message from self, ignoring") 
+    if message.author == bot.user:
+        logger.debug("Received message from self, ignoring")
         return
 
-    if not isinstance(message.channel, nextcord.DMChannel):  # Process only in guild channels
-        if message.author.id not in conversation_state:
-            conversation_state[message.author.id] = {"prompt": None, "last_response": None}
+    attachments_urls = await upload_files(message.attachments) if message.attachments else []
+    prompt_text = f"You are a DND dungeon master, give the player an amazing adventure in a time set where Steampunk machines reigned supreme in the city of London! Give the player a scenario could be funny, serious or normal and ask them to roll a d20 dice when they say they want to do something. BEFORE GIVING ANOTHER PROMPT, let them answer first. Based on what they said they rolled, respond accordingly. (1 being a low roll and 20 being a guarenteed action). Between each scenario, storytell about the surroundings of the city.'{message.content}'"
+    prompt = ChatPromptTemplate.from_messages([("system", prompt_text)])
+    logger.info("Generating response using Chat API")
 
-        if conversation_state[message.author.id]["prompt"] is None:
-            prompt_text = f"Respond with 'glad to see such enthusiasm!', You are a DND dungeon master, give the player an amazing adventure in a time set where Steampunk machines reigned supreme in the city of London! Give the player a scenario, could be funny, serious or normal. Ask them what they would want to do"
-        else:
-            prompt_text = f"{conversation_state[message.author.id]['prompt']} {message.content}"
-
-        prompt = ChatPromptTemplate.from_messages([("system", prompt_text)])
-        logger.info("Generating response using Chat API")
-
-        chain = (
-            RunnablePassthrough.assign(
-                input=lambda x: x["input"]
-            )
-            | prompt
-            | chat_api
-            | StrOutputParser()
+    chain = (
+        RunnablePassthrough.assign(
+            input=lambda x: x["input"]
         )
-        
-        try:
-            response = await chain.ainvoke({"input": message.content})
-            logger.info("Response generated successfully")
-            response_message = f"The Floating Gear Man: {response}"
-            await message.channel.send(response_message)
-            logger.info(f"Generated response: {response}")
-            conversation_state[message.author.id]["last_response"] = response
-            conversation_state[message.author.id]["prompt"] = message.content
-        except Exception as e:
-            logger.error(f"Failed to generate response: {e}")
-            await message.channel.send("Sorry, I encountered an error. Please try asking something else.")
+        | prompt
+        | chat_api
+        | StrOutputParser()
+    )
+
+    try:
+        response = await chain.ainvoke({"input": message.content})
+        logger.info("Response generated successfully")
+        response_message = f"The Floating Gear Man: {response}"
+        await message.channel.send(response_message)
+        logger.info(f"Generated response: {response}")
+    except Exception as e:
+        logger.error(f"Failed to generate response: {e}")
+        await message.channel.send("Sorry, I encountered an error. Please try asking something else.")
 
     if isinstance(message.channel, nextcord.DMChannel):
         logger.debug("Processing message in DM channel")
@@ -167,4 +155,3 @@ async def stop():
 
 if __name__ == "__main__":
     asyncio.run(start())
-
