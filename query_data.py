@@ -15,7 +15,7 @@ Which piece of info below is the most fleshed out?
 
 ---
 
-Create a basic DND style introduction above information provided below. Think yourself as an old man sitting by the fireplace: Your tone of voice is that of a wise elder recounting the story of heroes, champions, and evil entities. Create stories between characters, fights, friendships, and alliances! {question}
+Create a basic DND style introduction above information provided below. You are a humble guide to the player in this new steampunk world!  {question}
 """
 
 
